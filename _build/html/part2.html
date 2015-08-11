@@ -1,0 +1,141 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Part 2 - Wrtiting code to interface with MESA &mdash; MESA 2015 - External Modules Tutorial 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MESA 2015 - External Modules Tutorial 1.0 documentation" href="index.html" />
+    <link rel="prev" title="Part 1 - Compiling MESA code outside of MESA" href="part1.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="part1.html" title="Part 1 - Compiling MESA code outside of MESA"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MESA 2015 - External Modules Tutorial 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="part-2-wrtiting-code-to-interface-with-mesa">
+<h1>Part 2 - Wrtiting code to interface with MESA<a class="headerlink" href="#part-2-wrtiting-code-to-interface-with-mesa" title="Permalink to this headline">¶</a></h1>
+<p>Now that we can get things compiling outside of MESA, we&#8217;ll take a look inside the <code class="docutils literal"><span class="pre">sample_eos.f</span></code> file to see how it interfaces with MESA&#8217;s EOS module. The first thing you should notice is the include statements at the top.</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span class="k">use </span><span class="n">eos_def</span>
+<span class="k">use </span><span class="n">eos_lib</span>
+<span class="k">use </span><span class="n">chem_def</span>
+<span class="k">use </span><span class="n">chem_lib</span>
+<span class="k">use </span><span class="n">const_lib</span>
+<span class="k">use </span><span class="n">crlibm_lib</span>
+</pre></div>
+</div>
+<p>Each module has a library corresponding to a <code class="docutils literal"><span class="pre">def</span></code> (mostly module-level variables declarations, eg. the vector of results you get from querying the EOS module) and a <code class="docutils literal"><span class="pre">lib</span></code> (mostly subroutines that to the actual work of the module). If you want to use a module&#8217;s variables in your code you&#8217;ll need a <code class="docutils literal"><span class="pre">use</span> <span class="pre">*_def</span></code> statement at the beginning of your code, and if you want to use the subroutines or functions in a module, you&#8217;ll need a <code class="docutils literal"><span class="pre">use</span> <span class="pre">*_lib</span></code> for the appropriate module.</p>
+<p><em>Why do you think we&#8217;re using ``const_lib``, but not ``const_def`` here?</em></p>
+<p>If you want to take a look at the things you have access to in a module, you can look in the two files (eg. in the EOS module)</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$MESA_DIR</span>/eos/public/eos_def.f90
+<span class="nv">$MESA_DIR</span>/eos/public/eos_lib.f90
+</pre></div>
+</div>
+<p>For example, notice the integer <code class="docutils literal"><span class="pre">num_eos_basic_results</span></code> that defines the size of the EOS result arrays <code class="docutils literal"><span class="pre">res</span></code>, <code class="docutils literal"><span class="pre">d_dlnd</span></code>, <code class="docutils literal"><span class="pre">d_dlnT</span></code>, <code class="docutils literal"><span class="pre">d_dabar</span></code>, <code class="docutils literal"><span class="pre">d_dzbar</span></code> is not defined in the local code - it&#8217;s definition lies in <code class="docutils literal"><span class="pre">eos_def.f90</span></code>.</p>
+<p>The basic structure of the <code class="docutils literal"><span class="pre">sample_eos.f</span></code> code is to initialize all the modules. Most modules, even <code class="docutils literal"><span class="pre">const</span></code>, need an explicit call to an initialization subroutine that sets up all the module data, allocates arrays, etc. There are corresponding shutdown subroutines that should be called at the end of your program in order to free the allocated memory.</p>
+<div class="section" id="mini-exercise-1">
+<h2>Mini-exercise 1<a class="headerlink" href="#mini-exercise-1" title="Permalink to this headline">¶</a></h2>
+<p>Take a look at the result arrays that are returned by the subroutine <code class="docutils literal"><span class="pre">eosDT_get</span></code> (look at its documentation to figure out what&#8217;s going on). Some of the data is printed out to the screen already (Pgas, grad_ad, and c_P). Add statements to print out a few other quantities, the specific entropy and eta (the electron degeneracy parameter), as well as dlnS_dlnT.</p>
+</div>
+<div class="section" id="mini-exercise-2">
+<h2>Mini-exercise 2<a class="headerlink" href="#mini-exercise-2" title="Permalink to this headline">¶</a></h2>
+<p>Try the same thing with the net module. Make a directory next to your <code class="docutils literal"><span class="pre">eos_local</span></code> directory and put the <code class="docutils literal"><span class="pre">sample_net</span></code> code in it, compile it, and run it. <em>hint: you can use the same makefile you used for the EOS module</em>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Part 2 - Wrtiting code to interface with MESA</a><ul>
+<li><a class="reference internal" href="#mini-exercise-1">Mini-exercise 1</a></li>
+<li><a class="reference internal" href="#mini-exercise-2">Mini-exercise 2</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="part1.html"
+                        title="previous chapter">Part 1 - Compiling MESA code outside of MESA</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/part2.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Kevin Moore.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.3</a>
+      
+      |
+      <a href="_sources/part2.txt"
+          rel="nofollow">Page source</a></li>
+    </div>
+
+    
+
+    
+  </body>
+</html>
