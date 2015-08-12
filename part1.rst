@@ -49,7 +49,7 @@ If we try compiling again, it will still give an error:
    
    make: *** No rule to make target `eos_support.o', needed by `plotter'.  Stop.
    
-This tells us the makefile has rules for compiling files we don't have - there is no ``eos_support`` file in our folder anymore. The easiest change is to remove everything in *Step 3* of the makefile except the two lines
+This tells us the makefile has rules for compiling files we don't have - there is no ``eos_support`` file in our folder anymore. The easiest change is to remove everything in *Step 3* of the makefile except the lines
 
 .. code-block:: bash
 
@@ -59,6 +59,14 @@ This tells us the makefile has rules for compiling files we don't have - there i
 	
    $(SAMPLE) : $(SAMPLE_OBJS)
    	$(LOADER) $(FCopenmp) -o $(TEST_DIR)/$(SAMPLE) $(SAMPLE_OBJS) $(LOAD_MESA)
+      
+   #################################################################
+
+   SRC_DIR = .
+
+   %.o: $(SRC_DIR)/%.f
+   	$(FC) $(FCfixed) -I$(MESA_INCLUDE_DIR) -c $<
+   
       
 Finally, you should be able to compile the ``sample_eos.f`` file and get an executable out called ``sample``, which you can run by typing
 

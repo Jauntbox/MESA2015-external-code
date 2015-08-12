@@ -87,13 +87,20 @@ make: *** No rule to make target <span class="s1">&#39;\../../../utils/makefile_
 <div class="highlight-bash"><div class="highlight"><pre>make: *** No rule to make target <span class="sb">`</span>eos_support.o<span class="s1">&#39;, needed by `plotter&#39;</span>.  Stop.
 </pre></div>
 </div>
-<p>This tells us the makefile has rules for compiling files we don&#8217;t have - there is no <code class="docutils literal"><span class="pre">eos_support</span></code> file in our folder anymore. The easiest change is to remove everything in <em>Step 3</em> of the makefile except the two lines</p>
+<p>This tells us the makefile has rules for compiling files we don&#8217;t have - there is no <code class="docutils literal"><span class="pre">eos_support</span></code> file in our folder anymore. The easiest change is to remove everything in <em>Step 3</em> of the makefile except the lines</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="nv">SAMPLE</span> <span class="o">=</span> sample
 <span class="nv">SAMPLE_OBJS</span> <span class="o">=</span> sample_eos.o
 <span class="nv">TEST_DIR</span> <span class="o">=</span> .
 
 <span class="k">$(</span>SAMPLE<span class="k">)</span> : <span class="k">$(</span>SAMPLE_OBJS<span class="k">)</span>
      <span class="k">$(</span>LOADER<span class="k">)</span> <span class="k">$(</span>FCopenmp<span class="k">)</span> -o <span class="k">$(</span>TEST_DIR<span class="k">)</span>/<span class="k">$(</span>SAMPLE<span class="k">)</span> <span class="k">$(</span>SAMPLE_OBJS<span class="k">)</span> <span class="k">$(</span>LOAD_MESA<span class="k">)</span>
+
+<span class="c">#################################################################</span>
+
+<span class="nv">SRC_DIR</span> <span class="o">=</span> .
+
+%.o: <span class="k">$(</span>SRC_DIR<span class="k">)</span>/%.f
+     <span class="k">$(</span>FC<span class="k">)</span> <span class="k">$(</span>FCfixed<span class="k">)</span> -I<span class="k">$(</span>MESA_INCLUDE_DIR<span class="k">)</span> -c <span class="nv">$&lt;</span>
 </pre></div>
 </div>
 <p>Finally, you should be able to compile the <code class="docutils literal"><span class="pre">sample_eos.f</span></code> file and get an executable out called <code class="docutils literal"><span class="pre">sample</span></code>, which you can run by typing</p>

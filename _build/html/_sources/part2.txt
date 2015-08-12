@@ -34,4 +34,4 @@ Take a look at the result arrays that are returned by the subroutine ``eosDT_get
 
 Mini-exercise 2
 ---------------
-Try the same thing with the net module. Make a directory next to your ``eos_local`` directory and put the ``sample_net`` code in it, compile it, and run it. *hint: you can use the same makefile you used for the EOS module*.
+Try the same thing with the net module. Make a directory next to your ``eos_local`` directory and put the ``sample_net`` code in it, compile it, and run it. *hint: you can use nearly the same makefile you used for the EOS code, but you'll also have to change the $(FCfixed) to $(FCfree) in the last line*.
