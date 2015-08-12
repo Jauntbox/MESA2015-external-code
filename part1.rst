@@ -68,7 +68,7 @@ This tells us the makefile has rules for compiling files we don't have - there i
    	$(FC) $(FCfixed) -I$(MESA_INCLUDE_DIR) -c $<
    
       
-Finally, you should be able to compile the ``sample_eos.f`` file and get an executable out called ``sample``, which you can run by typing
+Finally, you should be able to compile the ``sample_eos.f`` file and get an executable out called ``sample`` (if you don't then double check your makefile for errors against the `example makefile <http://mesastar.org/teaching-materials/2015-mesa-summer-school/external_code_tutorial/example_makefile/view>`_ posted on mesastar.org). You can run your executable as you would any other, by typing
 
 .. code-block:: bash
 
